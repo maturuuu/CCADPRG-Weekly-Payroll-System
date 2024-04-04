@@ -1,7 +1,7 @@
 def setDefaults (dailySalary=500,
                 maxRegHours=8.0,
                 dayType = ['n', 'n', 'n', 'n', 'n', 'r', 'r'],
-                timeIn = Array.new(7, "0930"),
+                timeIn = Array.new(7, "0900"),
                 timeOut = Array.new(7, "0900"))
   $dailySalary = dailySalary
   $maxRegHours = maxRegHours.to_f
@@ -57,7 +57,66 @@ def calcHours (timeIn, timeOut)
   dayIndex+=1
   end
 
-  #separate hoursArr into categories and add to $dayBreakdown
+  regHours = Array.new(7, -1)
+  regHoursNight = Array.new(7, 0)
+  otHours = Array.new(7, 0)
+  otHoursNight = Array.new(7, 0)
+  dayIndex = 0
+
+  hoursArr.each do |row| # separate hoursArr into categories and add to $dayBreakdown
+    hourIndex = 0
+
+    9.times do # regular hours
+      regHours[dayIndex]+=1
+      if row[hourIndex] >= 2200 || row[hourIndex] < 600
+        regHoursNight[dayIndex]+=1
+      end
+      hourIndex+=1
+    end
+
+    if row.length > hourIndex # overtime hours (dayIndex = 0, hourIndex = 9)
+      for x in hourIndex...row.length
+        if row[x] >= 2200 || row[x] < 600
+          otHoursNight[dayIndex]+=1
+        else
+          otHours[dayIndex]+=1
+        end
+      end
+    end
+
+    dayIndex+=1
+  end
+
+  $dayBreakdown = [regHours, regHoursNight, otHours, otHoursNight] #update $dayBreakdown
+
+  #debugging
+  puts ""
+  puts "DEBUGGING -----------------------------------------"
+  print hoursArr[0]
+  puts ""
+  regHours.each { |x|
+    print x
+  }
+  puts ""
+  regHoursNight.each { |x|
+    print x
+  }
+  puts ""
+  otHours.each { |x|
+    print x
+  }
+  puts ""
+  otHoursNight.each { |x|
+    print x
+  }
+  puts ""
+  puts $dayBreakdown.inspect
+  puts "---------------------------------------------------"
+  puts ""
+
+end
+
+def calcPayroll (dayBreakdown)
 
 end
 
@@ -75,7 +134,7 @@ $dayBreakdown = nil # 2d array to store each day's breakdown:
                     # [overtime hours]
                     # [overtime hours (night shift)]
 
-setDefaults()
+setDefaults() # initializes default values
 
 # Main program starts here -------------------------------------------
 
@@ -86,13 +145,14 @@ loop do
 
   case choice
   when 1
-    # Get input
-    $timeOut = getTimeOut()
+    $timeOut = getTimeOut() # Get input
 
-    # Calculate weekly pay
-    calcHours($timeIn, $timeOut)
+    calcHours($timeIn, $timeOut) # Build the day breakdown
 
-    # Output breakdown
+    # Calculate payroll
+
+    # Display results
+
   when 2
     # Update configuration
   when 3
@@ -121,3 +181,8 @@ end
     #   - increment and reset if needed
     #   - repeat until time out is reached
     # 2. Separate the hours into categories and add to $dayBreakdown
+    # Per day:
+    #   - first 9 elements = 8 hour regular / regular night
+    #   - the rest = overtime / overtime night
+    # 3. Calculate weekly salary based on $dayBreakdown and dayType
+    #
