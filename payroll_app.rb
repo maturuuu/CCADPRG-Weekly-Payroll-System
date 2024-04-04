@@ -35,7 +35,7 @@ def getTimeOut
   return thisTimeOut
 end
 
-def calcHours (timeIn, timeOut)
+def calcHours (timeIn, timeOut, maxRegHours)
   hoursArr = Array.new(7){[]}
   dayIndex = 0
 
@@ -66,7 +66,7 @@ def calcHours (timeIn, timeOut)
   hoursArr.each do |row| # separate hoursArr into categories and add to $dayBreakdown
     hourIndex = 0
 
-    9.times do # regular hours
+    ((maxRegHours+1).to_i).times do # regular hours
       regHours[dayIndex]+=1
       if row[hourIndex] >= 2200 || row[hourIndex] < 600
         regHoursNight[dayIndex]+=1
@@ -111,12 +111,67 @@ def calcHours (timeIn, timeOut)
   }
   puts ""
   puts $dayBreakdown.inspect
-  puts "---------------------------------------------------"
   puts ""
 
 end
 
-def calcPayroll (dayBreakdown)
+def calcPayroll (dayBreakdown, dayType, hourlySalary)
+  dayTotal = Array.new(7, 0)
+
+  dayBreakdown = dayBreakdown.transpose
+
+  dayCtr = 0
+  dayBreakdown.each { |day| # calculates regular hours pay
+    case dayType[dayCtr]
+      when 'n' then dayTotal[dayCtr] += day[0] * hourlySalary
+      when 'r' then dayTotal[dayCtr] += day[0] * hourlySalary * 1.3
+      when 's' then dayTotal[dayCtr] += day[0] * hourlySalary * 1.3
+      when 'sr' then dayTotal[dayCtr] += day[0] * hourlySalary * 1.5
+      when 'h' then dayTotal[dayCtr] += day[0] * hourlySalary * 2.0
+      when 'hr' then dayTotal[dayCtr] += day[0] * hourlySalary * 2.6
+      else puts "Error -> dayType for #{dayCtr} has no value"
+    end
+
+    case dayType[dayCtr]  # calculates regular night shift hours pay
+      when 'n' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10
+      when 'r' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 1.3
+      when 's' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 1.3
+      when 'sr' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 1.5
+      when 'h' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 2.0
+      when 'hr' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 2.6
+      else puts "Error -> dayType for #{dayCtr} has no value"
+    end
+
+    case dayType[dayCtr] # calculates overtime hours pay
+      when 'n' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.25
+      when 'r' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.69
+      when 's' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.69
+      when 'sr' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.95
+      when 'h' then dayTotal[dayCtr] += day[2] * hourlySalary * 2.60
+      when 'hr' then dayTotal[dayCtr] += day[2] * hourlySalary * 3.38
+      else puts "Error -> dayType for #{dayCtr} has no value"
+    end
+
+  case dayType[dayCtr] # calculates overtime night shift hours pay
+    when 'n' then dayTotal[dayCtr] += day[3] * hourlySalary * 1.375
+    when 'r' then dayTotal[dayCtr] += day[3] * hourlySalary * 1.859
+    when 's' then dayTotal[dayCtr] += day[3] * hourlySalary * 1.859
+    when 'sr' then dayTotal[dayCtr] += day[3] * hourlySalary * 2.145
+    when 'h' then dayTotal[dayCtr] += day[3] * hourlySalary * 2.86
+    when 'hr' then dayTotal[dayCtr] += day[3] * hourlySalary * 3.718
+    else puts "Error -> dayType for #{dayCtr} has no value"
+  end
+
+    dayCtr+=1
+  }
+
+  #debugging
+  puts ""
+  puts "DEBUGGING -----------------------------------------"
+  dayTotal.each { |x|
+    print "#{x.round(2)} "
+  }
+  puts "\n\n"
 
 end
 
@@ -147,9 +202,9 @@ loop do
   when 1
     $timeOut = getTimeOut() # Get input
 
-    calcHours($timeIn, $timeOut) # Build the day breakdown
+    calcHours($timeIn, $timeOut, $maxRegHours) # Build the day breakdown
 
-    # Calculate payroll
+    totalPerDay = calcPayroll($dayBreakdown, $dayType, $hourlySalary) # Calculate payroll
 
     # Display results
 
@@ -186,3 +241,5 @@ end
     #   - the rest = overtime / overtime night
     # 3. Calculate weekly salary based on $dayBreakdown and dayType
     #
+    # Fix later - if not regular day, can enter timeOut same as timeIn
+    # and it will still pay.
