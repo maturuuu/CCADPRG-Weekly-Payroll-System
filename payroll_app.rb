@@ -12,11 +12,11 @@ def setDefaults (dailySalary=500,
 end
 
 def displayMainMenu
-  puts "MAIN MENU ----------------"
+  puts "MAIN MENU --------------------------"
   puts "[1] : Calculate weekly pay"
   puts "[2] : Update default configuration"
   puts "[3] : Exit program"
-  puts "--------------------------"
+  puts "------------------------------------"
   print "What would you like to do? => "
 end
 
@@ -24,11 +24,21 @@ def getTimeOut
   thisTimeOut = []
   dayCount = 1
 
-  puts "\n--------------------------"
+  puts "\n----------------------------------"
   puts "Please enter time out (HHMM): \n\n"
   7.times do
     print "Time out for day #{dayCount} => "
-    thisTimeOut.push(gets.chomp)
+    entry = gets.chomp
+
+
+    while entry.length != 4
+      print "\n"
+      puts "Invalid time out, please enter in HHMM (4-digit) format"
+      print "Time out for day #{dayCount} => "
+      entry = gets.chomp
+    end
+
+    thisTimeOut.push(entry)
     dayCount+=1
   end
 
@@ -73,7 +83,7 @@ def calcHours (timeIn, timeOut, maxRegHours)
 
     if row[0] == "absent"
       if $dayType[dayIndex] != "n"
-        regHours[dayIndex] = "rest"
+        regHours[dayIndex] = "Rest"
       else
         regHours[dayIndex] = 0
       end
@@ -103,28 +113,28 @@ def calcHours (timeIn, timeOut, maxRegHours)
   $dayBreakdown = [regHours, regHoursNight, otHours, otHoursNight] #update $dayBreakdown
 
   #debugging
-  puts ""
-  puts "DEBUGGING -----------------------------------------"
-  print hoursArr[0]
-  puts ""
-  regHours.each { |x|
-    print x
-  }
-  puts ""
-  regHoursNight.each { |x|
-    print x
-  }
-  puts ""
-  otHours.each { |x|
-    print x
-  }
-  puts ""
-  otHoursNight.each { |x|
-    print x
-  }
-  puts ""
-  puts $dayBreakdown.inspect
-  puts ""
+  # puts ""
+  # puts "DEBUGGING -----------------------------------------"
+  # print hoursArr[0]
+  # puts ""
+  # regHours.each { |x|
+  #   print x
+  # }
+  # puts ""
+  # regHoursNight.each { |x|
+  #   print x
+  # }
+  # puts ""
+  # otHours.each { |x|
+  #   print x
+  # }
+  # puts ""
+  # otHoursNight.each { |x|
+  #   print x
+  # }
+  # puts ""
+  # puts $dayBreakdown.inspect
+  # puts ""
 
 end
 
@@ -136,7 +146,7 @@ def calcPayroll (dayBreakdown, dayType, hourlySalary)
   dayCtr = 0
   dayBreakdown.each { |day| # calculates regular hours pay
 
-    if day[0] == "rest"
+    if day[0] == "Rest"
       dayTotal[dayCtr] = $dailySalary.to_f
 
     else
@@ -187,6 +197,89 @@ def calcPayroll (dayBreakdown, dayType, hourlySalary)
   return dayTotal
 end
 
+def printPayroll (timeIn, timeOut, dayBreakdown, dayType, dailySalary, totalPerDay)
+  dayBreakdown = dayBreakdown.transpose
+  width = 60;
+
+  puts "\n"
+  puts "============================================================"
+  puts "|                     WEEKLY PAYROLL                       |"
+  puts "============================================================"
+
+  dayCtr = 0
+  dayBreakdown.each { |day|
+  puts "============================================================"
+  print "| DAY #{dayCtr+1} : "
+  dayTypeStr = nil
+  case dayType[dayCtr]
+    when 'n' then dayTypeStr = "Regular day"
+    when 'r' then dayTypeStr = "Rest day"
+    when 's' then dayTypeStr = "Special non-working day"
+    when 'sr' then dayTypeStr = "Special non-working day and Rest day"
+    when 'h' then dayTypeStr = "Regular holiday"
+    when 'hr' then dayTypeStr = "Regular holiday and Rest day"
+    else dayTypeStr = "No day type assigned"
+  end
+  puts "#{dayTypeStr} |".rjust(width-10, " ")
+  puts "|----------------------------------------------------------|"
+
+  print "| Daily rate"
+  puts "PHP #{(dailySalary.to_f).round(2)} |".rjust(width-12, " ")
+
+  print "| Time IN"
+  timeStr = nil
+  if day[0] == "Rest"
+    timeStr = "(#{timeIn[dayCtr]}) Rest"
+  elsif day[0] == 0
+    timeStr = "(#{timeIn[dayCtr]}) Absent"
+  else
+    timeStr = timeIn[dayCtr]
+  end
+  puts "#{timeStr} |".rjust(width-9)
+
+  print "| Time OUT"
+  timeStr = nil
+  if day[0] == "Rest"
+    timeStr = "Rest"
+  elsif day[0] == 0
+    timeStr = "Absent"
+  else
+    timeStr = timeOut[dayCtr]
+  end
+  puts "#{timeStr} |".rjust(width-10)
+
+  if day[0] != 0 && day[0] != "Rest"
+    print "| Regular hours"
+    puts "#{day[0]} hrs + 1 hr break |".rjust(width-15)
+  end
+
+  if day[1] != 0
+    print "| Regular hours on night shift"
+    puts "#{day[1]} hrs |".rjust(width-30)
+  end
+
+  if day[2] != 0
+    print "| Overtime hours on regular shift"
+    puts "#{day[2]} hrs |".rjust(width-33)
+  end
+
+  if day[3] != 0
+    print "| Overtime hours on night shift"
+    puts "#{day[3]} hrs |".rjust(width-31)
+  end
+
+  puts "|----------------------------------------------------------|"
+  print "| Total pay for DAY #{dayCtr+1}:"
+  puts "PHP #{totalPerDay[dayCtr]} |".rjust(width-22)
+  puts "============================================================\n"
+
+  dayCtr+=1
+  }
+
+  puts "\n"
+
+end
+
 # Defaults and other global variables ---------------------------------------
 
 $dailySalary = nil # default
@@ -219,14 +312,14 @@ loop do
     totalPerDay = calcPayroll($dayBreakdown, $dayType, $hourlySalary) # Calculate payroll
 
     #debugging
-    puts ""
-    puts "DEBUGGING -----------------------------------------"
-    totalPerDay.each { |x|
-      print "#{x.round(2)} "
-    }
-    puts "\n\n"
+    # puts ""
+    # puts "DEBUGGING -----------------------------------------"
+    # totalPerDay.each { |x|
+    #   print "#{x.round(2)} "
+    # }
+    # puts "\n\n"
 
-    # Display results
+    printPayroll($timeIn, $timeOut, $dayBreakdown, $dayType, $dailySalary, totalPerDay) # Display results
 
   when 2
     # Update configuration
@@ -263,3 +356,6 @@ end
     #
     # Fix later - if not regular day, can enter timeOut same as timeIn
     # and it will still pay.
+# Print daily and weekly salary
+# Update default configuration function
+# DONEZO
