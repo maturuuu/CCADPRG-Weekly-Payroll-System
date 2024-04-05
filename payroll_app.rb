@@ -1,6 +1,6 @@
 def setDefaults (dailySalary=500,
                 maxRegHours=8.0,
-                dayType = ['n', 'n', 'n', 'n', 'n', 'r', 'r'],
+                dayType = ['n', 'n', 'r', 's', 'sr', 'h', 'hr'],
                 timeIn = Array.new(7, "0900"),
                 timeOut = Array.new(7, "0900"))
   $dailySalary = dailySalary
@@ -43,14 +43,19 @@ def calcHours (timeIn, timeOut, maxRegHours)
 
     currentTime = timeIn[dayIndex].to_i
 
-    while currentTime != timeOut[dayIndex].to_i do
-      hoursArr[dayIndex] << currentTime
+    if currentTime == timeOut[dayIndex].to_i
+      hoursArr[dayIndex] << "absent"
 
-      currentTime += 100
-      if currentTime == 2400
-        currentTime = 0
-      elsif currentTime > 2400
-        currentTime -= 2400
+    else
+      while currentTime != timeOut[dayIndex].to_i do
+        hoursArr[dayIndex] << currentTime
+
+        currentTime += 100
+        if currentTime == 2400
+          currentTime = 0
+        elsif currentTime > 2400
+          currentTime -= 2400
+        end
       end
     end
 
@@ -66,20 +71,28 @@ def calcHours (timeIn, timeOut, maxRegHours)
   hoursArr.each do |row| # separate hoursArr into categories and add to $dayBreakdown
     hourIndex = 0
 
-    ((maxRegHours+1).to_i).times do # regular hours
-      regHours[dayIndex]+=1
-      if row[hourIndex] >= 2200 || row[hourIndex] < 600
-        regHoursNight[dayIndex]+=1
+    if row[0] == "absent"
+      if $dayType[dayIndex] != "n"
+        regHours[dayIndex] = "rest"
+      else
+        regHours[dayIndex] = 0
       end
-      hourIndex+=1
-    end
+    else
+      ((maxRegHours+1).to_i).times do # regular hours
+        regHours[dayIndex]+=1
+        if row[hourIndex] >= 2200 || row[hourIndex] < 600
+          regHoursNight[dayIndex]+=1
+        end
+        hourIndex+=1
+      end
 
-    if row.length > hourIndex # overtime hours (dayIndex = 0, hourIndex = 9)
-      for x in hourIndex...row.length
-        if row[x] >= 2200 || row[x] < 600
-          otHoursNight[dayIndex]+=1
-        else
-          otHours[dayIndex]+=1
+      if row.length > hourIndex # overtime hours (dayIndex = 0, hourIndex = 9)
+        for x in hourIndex...row.length
+          if row[x] >= 2200 || row[x] < 600
+            otHoursNight[dayIndex]+=1
+          else
+            otHours[dayIndex]+=1
+          end
         end
       end
     end
@@ -122,57 +135,56 @@ def calcPayroll (dayBreakdown, dayType, hourlySalary)
 
   dayCtr = 0
   dayBreakdown.each { |day| # calculates regular hours pay
-    case dayType[dayCtr]
-      when 'n' then dayTotal[dayCtr] += day[0] * hourlySalary
-      when 'r' then dayTotal[dayCtr] += day[0] * hourlySalary * 1.3
-      when 's' then dayTotal[dayCtr] += day[0] * hourlySalary * 1.3
-      when 'sr' then dayTotal[dayCtr] += day[0] * hourlySalary * 1.5
-      when 'h' then dayTotal[dayCtr] += day[0] * hourlySalary * 2.0
-      when 'hr' then dayTotal[dayCtr] += day[0] * hourlySalary * 2.6
-      else puts "Error -> dayType for #{dayCtr} has no value"
-    end
 
-    case dayType[dayCtr]  # calculates regular night shift hours pay
-      when 'n' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10
-      when 'r' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 1.3
-      when 's' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 1.3
-      when 'sr' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 1.5
-      when 'h' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 2.0
-      when 'hr' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 2.6
-      else puts "Error -> dayType for #{dayCtr} has no value"
-    end
+    if day[0] == "rest"
+      dayTotal[dayCtr] = $dailySalary.to_f
 
-    case dayType[dayCtr] # calculates overtime hours pay
-      when 'n' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.25
-      when 'r' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.69
-      when 's' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.69
-      when 'sr' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.95
-      when 'h' then dayTotal[dayCtr] += day[2] * hourlySalary * 2.60
-      when 'hr' then dayTotal[dayCtr] += day[2] * hourlySalary * 3.38
-      else puts "Error -> dayType for #{dayCtr} has no value"
-    end
+    else
+      case dayType[dayCtr]
+        when 'n' then dayTotal[dayCtr] += day[0] * hourlySalary
+        when 'r' then dayTotal[dayCtr] += day[0] * hourlySalary * 1.3
+        when 's' then dayTotal[dayCtr] += day[0] * hourlySalary * 1.3
+        when 'sr' then dayTotal[dayCtr] += day[0] * hourlySalary * 1.5
+        when 'h' then dayTotal[dayCtr] += day[0] * hourlySalary * 2.0
+        when 'hr' then dayTotal[dayCtr] += day[0] * hourlySalary * 2.6
+        else puts "Error -> dayType for #{dayCtr} has no value"
+      end
 
-  case dayType[dayCtr] # calculates overtime night shift hours pay
-    when 'n' then dayTotal[dayCtr] += day[3] * hourlySalary * 1.375
-    when 'r' then dayTotal[dayCtr] += day[3] * hourlySalary * 1.859
-    when 's' then dayTotal[dayCtr] += day[3] * hourlySalary * 1.859
-    when 'sr' then dayTotal[dayCtr] += day[3] * hourlySalary * 2.145
-    when 'h' then dayTotal[dayCtr] += day[3] * hourlySalary * 2.86
-    when 'hr' then dayTotal[dayCtr] += day[3] * hourlySalary * 3.718
-    else puts "Error -> dayType for #{dayCtr} has no value"
-  end
+      case dayType[dayCtr]  # calculates regular night shift hours pay
+        when 'n' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10
+        when 'r' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 1.3
+        when 's' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 1.3
+        when 'sr' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 1.5
+        when 'h' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 2.0
+        when 'hr' then dayTotal[dayCtr] += day[1] * hourlySalary * 0.10 * 2.6
+        else puts "Error -> dayType for #{dayCtr} has no value"
+      end
+
+      case dayType[dayCtr] # calculates overtime hours pay
+        when 'n' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.25
+        when 'r' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.69
+        when 's' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.69
+        when 'sr' then dayTotal[dayCtr] += day[2] * hourlySalary * 1.95
+        when 'h' then dayTotal[dayCtr] += day[2] * hourlySalary * 2.60
+        when 'hr' then dayTotal[dayCtr] += day[2] * hourlySalary * 3.38
+        else puts "Error -> dayType for #{dayCtr} has no value"
+      end
+
+      case dayType[dayCtr] # calculates overtime night shift hours pay
+        when 'n' then dayTotal[dayCtr] += day[3] * hourlySalary * 1.375
+        when 'r' then dayTotal[dayCtr] += day[3] * hourlySalary * 1.859
+        when 's' then dayTotal[dayCtr] += day[3] * hourlySalary * 1.859
+        when 'sr' then dayTotal[dayCtr] += day[3] * hourlySalary * 2.145
+        when 'h' then dayTotal[dayCtr] += day[3] * hourlySalary * 2.86
+        when 'hr' then dayTotal[dayCtr] += day[3] * hourlySalary * 3.718
+        else puts "Error -> dayType for #{dayCtr} has no value"
+      end
+    end
 
     dayCtr+=1
   }
 
-  #debugging
-  puts ""
-  puts "DEBUGGING -----------------------------------------"
-  dayTotal.each { |x|
-    print "#{x.round(2)} "
-  }
-  puts "\n\n"
-
+  return dayTotal
 end
 
 # Defaults and other global variables ---------------------------------------
@@ -205,6 +217,14 @@ loop do
     calcHours($timeIn, $timeOut, $maxRegHours) # Build the day breakdown
 
     totalPerDay = calcPayroll($dayBreakdown, $dayType, $hourlySalary) # Calculate payroll
+
+    #debugging
+    puts ""
+    puts "DEBUGGING -----------------------------------------"
+    totalPerDay.each { |x|
+      print "#{x.round(2)} "
+    }
+    puts "\n\n"
 
     # Display results
 
