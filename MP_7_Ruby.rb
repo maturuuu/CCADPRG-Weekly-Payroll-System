@@ -119,30 +119,6 @@ def calcHours (timeIn, timeOut, maxRegHours)
 
   $dayBreakdown = [regHours, regHoursNight, otHours, otHoursNight] #update $dayBreakdown
 
-  #debugging
-  # puts ""
-  # puts "DEBUGGING -----------------------------------------"
-  # print hoursArr[0]
-  # puts ""
-  # regHours.each { |x|
-  #   print x
-  # }
-  # puts ""
-  # regHoursNight.each { |x|
-  #   print x
-  # }
-  # puts ""
-  # otHours.each { |x|
-  #   print x
-  # }
-  # puts ""
-  # otHoursNight.each { |x|
-  #   print x
-  # }
-  # puts ""
-  # puts $dayBreakdown.inspect
-  # puts ""
-
 end
 
 def calcPayroll (dayBreakdown, dayType, hourlySalary)
@@ -512,14 +488,6 @@ loop do
 
     totalPerDay = calcPayroll($dayBreakdown, $dayType, $hourlySalary) # Calculate payroll
 
-    #debugging
-    # puts ""
-    # puts "DEBUGGING -----------------------------------------"
-    # totalPerDay.each { |x|
-    #   print "#{x.round(2)} "
-    # }
-    # puts "\n\n"
-
     printPayroll($timeIn, $timeOut, $dayBreakdown, $dayType, $dailySalary, totalPerDay) # Display results
 
   when 2
@@ -532,32 +500,3 @@ loop do
     puts "Invalid choice, please input a number from 1 to 3\n\n"
   end
 end
-
-
-# NOTES --------------------------------------------
-# Per day:
-    # Calculate first 9 hours (8 work hours + 1 unpaid break hour)
-    #   - what type of day?
-    #   - are there hours that go into night shift?
-    # Calculate overtime
-    #   - how many hours of overtime?
-    #   - how many of those hours are night shift?
-    #   - what type of day?
-
-# Calculating the hours:
-    # 1. Add all hours of each day into a 2d array (rows = days)
-    # Per day:
-    #   - add current time to array
-    #   - increment and reset if needed
-    #   - repeat until time out is reached
-    # 2. Separate the hours into categories and add to $dayBreakdown
-    # Per day:
-    #   - first 9 elements = 8 hour regular / regular night
-    #   - the rest = overtime / overtime night
-    # 3. Calculate weekly salary based on $dayBreakdown and dayType
-    #
-    # Fix later - if not regular day, can enter timeOut same as timeIn
-    # and it will still pay.
-# Print daily and weekly salary
-# Update default configuration function
-# DONEZO
