@@ -1,3 +1,9 @@
+# ***************************************************************
+# Last names: ONG, GUO, GONZAGA, QUIAMBAO
+# Language: RUBY
+# Paradigm(s): Imperative / OOP (this program is more imperative)
+# ***************************************************************
+
 def setDefaults (dailySalary=500,
                 maxRegHours=8,
                 dayType = ['n', 'n', 'n', 'n', 'n', 'r', 'r'],
