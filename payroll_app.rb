@@ -4,7 +4,7 @@ def setDefaults (dailySalary=500,
                 timeIn = Array.new(7, "0900"),
                 timeOut = Array.new(7, "0900"))
   $dailySalary = dailySalary.to_f
-  $maxRegHours = maxRegHours.to_f
+  $maxRegHours = maxRegHours
   $hourlySalary = dailySalary/maxRegHours
   $dayType = dayType.dup
   $timeIn = timeIn.dup
@@ -12,11 +12,12 @@ def setDefaults (dailySalary=500,
 end
 
 def displayMainMenu
-  puts "MAIN MENU --------------------------"
+  print "MAIN MENU "
+  puts "-" * (35-10)
   puts "[1] : Calculate weekly pay"
   puts "[2] : Update default configuration"
   puts "[3] : Exit program"
-  puts "------------------------------------"
+  puts "-" * 35
   print "What would you like to do? => "
 end
 
@@ -24,8 +25,8 @@ def getTimeOut
   thisTimeOut = []
   dayCount = 1
 
-  puts "\n----------------------------------"
-  puts "Please enter time out (HHMM): \n\n"
+  puts "\n-----------------------------------"
+  puts "Please enter time OUT (HHMM): \n\n"
   7.times do
     print "Time out for day #{dayCount} => "
     entry = gets.chomp
@@ -33,8 +34,8 @@ def getTimeOut
 
     while entry.length != 4
       print "\n"
-      puts "Invalid time out, please enter in HHMM (4-digit) format"
-      print "Time out for day #{dayCount} => "
+      puts "Invalid time OUT, please enter in HHMM (4-digit) format"
+      print "Time OUT for day #{dayCount} => "
       entry = gets.chomp
     end
 
@@ -270,7 +271,7 @@ def printPayroll (timeIn, timeOut, dayBreakdown, dayType, dailySalary, totalPerD
 
   puts "|----------------------------------------------------------|"
   print "| Total pay for DAY #{dayCtr+1}:"
-  puts "PHP #{totalPerDay[dayCtr]} |".rjust(width-22)
+  puts "PHP #{totalPerDay[dayCtr].round(2)} |".rjust(width-22)
   puts "============================================================\n"
 
   dayCtr+=1
@@ -294,7 +295,7 @@ def displayDefaults
   puts "|" + ("-" * (width-2)) + "|"
 
   print "| [1] Daily Salary:"
-  puts "#{$dailySalary.to_f} |".rjust(width-19)
+  puts "PHP #{$dailySalary.to_f.round(2)} |".rjust(width-19)
   print "| [2] Regular work hours:"
   puts "#{$maxRegHours.to_i} hrs |".rjust(width-25)
   puts "| [3] Weekly calendar:                                     |"
@@ -320,9 +321,12 @@ def displayDefaults
     print "|     "
     print "Day #{dayCtr+1}:"
     puts "#{day} |".rjust(width-12)
+    dayCtr+=1
   }
 
   puts "=" * width
+  puts "[5]: Reset all settings to the default configuration"
+  puts "[6]: Back"
   puts "\n"
 
 end
@@ -335,15 +339,126 @@ def updateDefaults
     print "Select a setting to edit => "
     choice = gets.chomp.to_i
     print "\n"
-    while choice > 4 || choice < 1
+    while choice > 6 || choice < 1
       print "Invalid choice, please enter between 1 and 4 => "
       choice = gets.chomp.to_i
     end
-    # case choice
-    # when #continue editing here - add editors for each setting
-    # end
+    case choice
+    when 1
+      print "Enter new daily salary => "
+      choice = gets.chomp.to_f
+      puts "Daily salary changed: #{$dailySalary} -> #{choice}"
+      setDefaults(choice, $maxRegHours, $dayType, $timeIn, $timeOut)
 
-    puts "[1]: YES | [2]: NO"
+    when 2
+      print "Enter new regular work hours => "
+      choice = gets.chomp.to_i
+      puts "Regular work hours changed: #{$maxRegHours} -> #{choice}"
+      setDefaults($dailySalary, choice, $dayType, $timeIn, $timeOut)
+
+    when 3
+      puts "-" * 35
+      puts "[1]: Regular work day"
+      puts "[2]: Rest day"
+      puts "[3]: Special non-working day"
+      puts "[4]: Special non-working day and Rest day"
+      puts "[5]: Regular holiday"
+      puts "[6]: Regular holiday and Rest day"
+      puts "-" * 35
+      dayCtr = 0
+      $dayType.each { |day|
+        print "Enter day type for Day #{dayCtr+1} => "
+        choice = gets.chomp.to_i
+        while choice < 1 || choice > 6
+          print "Invalid choice, please enter between 1 and 6 => "
+          choice = gets.chomp.to_i
+        end
+
+        case day
+          when 'n' then dayTypeStr = "Regular day"
+          when 'r' then dayTypeStr = "Rest day"
+          when 's' then dayTypeStr = "Special non-working day"
+          when 'sr' then dayTypeStr = "Special non-working day and Rest day"
+          when 'h' then dayTypeStr = "Regular holiday"
+          when 'hr' then dayTypeStr = "Regular holiday and Rest day"
+          else dayTypeStr = "No day type assigned"
+        end
+
+        case choice
+          when 1
+            dayTypeChoice = "Regular day"
+            dayChoice = 'n'
+          when 2
+            dayTypeChoice = "Rest day"
+            dayChoice = 'r'
+          when 3
+            dayTypeChoice = "Special non-working day"
+            dayChoice = 's'
+          when 4
+            dayTypeChoice = "Special non-working day and Rest day"
+            dayChoice = 'sr'
+          when 5
+            dayTypeChoice = "Regular holiday"
+            dayChoice = 'h'
+          when 6
+            dayTypeChoice = "Regular holiday and Rest day"
+            dayChoice = 'hr'
+        end
+
+        puts "Day #{dayCtr+1} changed: #{dayTypeStr} -> #{dayTypeChoice}\n\n"
+        $dayType[dayCtr] = dayChoice
+        dayCtr+=1
+      }
+
+    when 4
+      puts "[1]: Set default time IN"
+      puts "[2]: Set time IN for each day"
+      print "Edit time IN via => "
+      choice = gets.chomp.to_i
+      print "\n"
+      while choice != 1 && choice != 2
+        print "Invalid choice, please enter either 1 or 2 => "
+        choice = gets.chomp.to_i
+      end
+
+      if choice == 1
+        print "Enter new default time IN => "
+        timeChoice = gets.chomp
+        while timeChoice.length != 4
+          print "\n"
+          print "Invalid time IN, please enter in HHMM (4-digit) format => "
+          timeChoice = gets.chomp
+        end
+        puts "Default time IN set to #{timeChoice}"
+        setDefaults($dailySalary, $maxRegHours, $dayType, Array.new(7, timeChoice), $timeOut)
+      end
+
+      if choice == 2
+        dayCtr = 0
+        $timeIn.each { |day|
+          print "Enter time IN for day #{dayCtr+1} => "
+          timeChoice = gets.chomp
+          while timeChoice.length != 4
+            print "\n"
+            print "Invalid time IN, please enter in HHMM (4-digit) format => "
+            timeChoice = gets.chomp
+          end
+          puts "Day #{dayCtr+1} time IN changed: #{day} -> #{timeChoice}\n\n"
+          $timeIn[dayCtr] = timeChoice
+          dayCtr+=1
+        }
+      end
+
+    when 5
+      puts "Configuration reset!\n"
+      setDefaults()
+
+    when 6
+      break
+
+    end
+
+    puts "\n[1]: YES | [2]: NO"
     print "Continue editing settings? => "
     choice = gets.chomp.to_i
     print "\n"
@@ -376,7 +491,9 @@ setDefaults() # initializes default values
 
 # Main program starts here -------------------------------------------
 
-puts "\nWelcome to the weekly payroll calculator powered by Ruby!\n\n"
+puts "\n====================================================================="
+puts "|     Welcome to the WEEKLY PAYROLL CALCULATOR powered by Ruby!     |"
+puts "=====================================================================\n\n"
 loop do
   displayMainMenu()
   choice = gets.chomp.to_i
