@@ -1,9 +1,9 @@
 def setDefaults (dailySalary=500,
-                maxRegHours=8.0,
-                dayType = ['n', 'n', 'r', 's', 'sr', 'h', 'hr'],
+                maxRegHours=8,
+                dayType = ['n', 'n', 'n', 'n', 'n', 'r', 'r'],
                 timeIn = Array.new(7, "0900"),
                 timeOut = Array.new(7, "0900"))
-  $dailySalary = dailySalary
+  $dailySalary = dailySalary.to_f
   $maxRegHours = maxRegHours.to_f
   $hourlySalary = dailySalary/maxRegHours
   $dayType = dayType.dup
@@ -276,7 +276,85 @@ def printPayroll (timeIn, timeOut, dayBreakdown, dayType, dailySalary, totalPerD
   dayCtr+=1
   }
 
+  puts "============================================================"
+  print "| TOTAL WEEKLY PAY:"
+  weekTotal = totalPerDay.sum
+  puts "PHP #{weekTotal.round(2)} |".rjust(width-19)
+  puts "============================================================"
   puts "\n"
+
+end
+
+def displayDefaults
+  width = 60
+
+  print "\n"
+  puts "=" * width
+  puts "|                     Current settings                     |"
+  puts "|" + ("-" * (width-2)) + "|"
+
+  print "| [1] Daily Salary:"
+  puts "#{$dailySalary.to_f} |".rjust(width-19)
+  print "| [2] Regular work hours:"
+  puts "#{$maxRegHours.to_i} hrs |".rjust(width-25)
+  puts "| [3] Weekly calendar:                                     |"
+  dayCtr = 0
+  $dayType.each { |day|
+    print "|     "
+    case day
+      when 'n' then dayTypeStr = "Regular day"
+      when 'r' then dayTypeStr = "Rest day"
+      when 's' then dayTypeStr = "Special non-working day"
+      when 'sr' then dayTypeStr = "Special non-working day and Rest day"
+      when 'h' then dayTypeStr = "Regular holiday"
+      when 'hr' then dayTypeStr = "Regular holiday and Rest day"
+      else dayTypeStr = "No day type assigned"
+    end
+    print "Day #{dayCtr+1}:"
+    puts "#{dayTypeStr} |".rjust(width-12)
+    dayCtr+=1
+  }
+  puts "| [4] Default time IN:                                     |"
+  dayCtr = 0
+  $timeIn.each { |day|
+    print "|     "
+    print "Day #{dayCtr+1}:"
+    puts "#{day} |".rjust(width-12)
+  }
+
+  puts "=" * width
+  puts "\n"
+
+end
+
+def updateDefaults
+
+  loop do
+    displayDefaults()
+
+    print "Select a setting to edit => "
+    choice = gets.chomp.to_i
+    print "\n"
+    while choice > 4 || choice < 1
+      print "Invalid choice, please enter between 1 and 4 => "
+      choice = gets.chomp.to_i
+    end
+    # case choice
+    # when #continue editing here - add editors for each setting
+    # end
+
+    puts "[1]: YES | [2]: NO"
+    print "Continue editing settings? => "
+    choice = gets.chomp.to_i
+    print "\n"
+    while choice != 2 && choice != 1
+      print "Invalid choice, please enter either 1 or 2 => "
+      choice = gets.chomp.to_i
+    end
+    if choice == 2 # exit settings editor
+      break
+    end
+  end
 
 end
 
@@ -322,7 +400,8 @@ loop do
     printPayroll($timeIn, $timeOut, $dayBreakdown, $dayType, $dailySalary, totalPerDay) # Display results
 
   when 2
-    # Update configuration
+    updateDefaults() # Update configuration
+
   when 3
     puts "Exiting program..."
     break
